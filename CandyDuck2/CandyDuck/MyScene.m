@@ -13,6 +13,9 @@
 #import "ChooseWorldScene.h"
 #import "AppDelegate.h"
 #import "HomeScene.h"
+#import <sys/socket.h>
+#import <netinet/in.h>
+#import <SystemConfiguration/SystemConfiguration.h>
 static const uint32_t duckCategory     =  0x1 << 0;
 static const uint32_t allTargetCategory        =  0x1 << 1;
 static const uint32_t airFlorCategory        =  0x1 << 2;
@@ -81,6 +84,18 @@ HomeScene * homeScene;
                                                  restore:YES]] withKey:ENDING_DUCK_KEY];
     return;
 }
+-(void) willMoveFromView:(SKView *)view
+{
+    [self.children enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        SKNode* child = obj;
+        [child removeAllActions];
+    }];
+    
+    [self removeAllChildren];
+    [_backgroundAudioPlayer stop];
+    gAdBannerView=nil;
+}
+
 -(void)setAnimationEndDuck{
     NSMutableArray *walkFrames = [NSMutableArray array];
     SKTextureAtlas *bearAnimatedAtlas;
@@ -175,6 +190,7 @@ HomeScene * homeScene;
     [self addScoreLabel];
     [self startBackgroundMusic];
     [self addHeighScore];
+    [self initGameOverViewAndAdmob];
     if(readyGameView==nil){
         readyGameView = [[ReadyGameView alloc]init];
         readyGameView.frame =  CGRectMake(0,0,self.size.width, self.size.height);
@@ -196,7 +212,7 @@ HomeScene * homeScene;
     spriteDuck.physicsBody.dynamic = YES;
     isGameStart = YES;
 }
--(void)addGameOverView{
+-(void)initGameOverViewAndAdmob{
     if(gameOverView==nil){
         gameOverView = [[GameOverView alloc]init];
         gameOverView.frame =  CGRectMake(0,0,self.size.width, self.size.height);
@@ -208,27 +224,19 @@ HomeScene * homeScene;
         [gameOverView.shareButton addTarget:self action:@selector(shareFaceBookPressed:) forControlEvents:UIControlEventTouchUpInside];
         [gameOverView.selectMapButton addTarget:self action:@selector(SelectMapButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     }
-   
-//    CGSize bannerSize = [ADBannerView sizeFromBannerContentSizeIdentifier:ADBannerContentSizeIdentifierPortrait];
-//    iAdBannerView = [[ADBannerView alloc] initWithFrame:CGRectMake((self.size.width/2)-(bannerSize.width/2), -bannerSize.height, bannerSize.width, bannerSize.height)];
-//    iAdBannerView.delegate = self;
-//    [gameOverView addSubview:iAdBannerView];
-
+    
+    
     gAdBannerView = [[GADBannerView alloc] initWithFrame:CGRectMake((self.size.width/2)-(GAD_SIZE_320x50.width/2), -GAD_SIZE_320x50.height, GAD_SIZE_320x50.width, GAD_SIZE_320x50.height)];
     gAdBannerView.adUnitID = @"e4a2102fe20a4f66";
     gAdBannerView.hidden = YES;
-        gAdBannerView.delegate = self;
+    gAdBannerView.delegate = self;
     gAdBannerView.rootViewController = self.view.window.rootViewController;
     [gameOverView addSubview:gAdBannerView];
-        GADRequest *request =[GADRequest request];
-        //    request.testing = YES;
-        //request.testDevices = @[ @"14503a83b94f3dd470c7429075deabc6" ];
-        [gAdBannerView loadRequest:request];
-        [self showTopBanner:gAdBannerView];
-
-  
-
-    
+    gameOverView.hidden = YES;
+}
+-(void)addGameOverView{
+ gameOverView.hidden = NO;
+    [self showTopBanner:gAdBannerView];
     gameOverView.scoreLabel.text = [NSString stringWithFormat:@"%i",score];
     [self sendScore:score];
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
@@ -289,10 +297,10 @@ HomeScene * homeScene;
 }
 
 - (void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error{
-    GADRequest *request =[GADRequest request];
+//    GADRequest *request =[GADRequest request];
 //    request.testing = YES;
 //request.testDevices = @[ @"14503a83b94f3dd470c7429075deabc6" ];
-    [gAdBannerView loadRequest:request];
+//    [gAdBannerView loadRequest:request];
     [self hideTopBanner:iAdBannerView];
     [self showTopBanner:gAdBannerView];
 }
@@ -305,6 +313,8 @@ HomeScene * homeScene;
     if ([iAdBannerView isHidden]) {
         [self showTopBanner:banner];
     }
+    [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
+    
 }
 
 -(void)playButtonPressed:(id)sender{
@@ -346,7 +356,7 @@ HomeScene * homeScene;
     homeScene = [HomeScene sceneWithSize:self.view.bounds.size];
     homeScene.delegate = self;
     homeScene.scaleMode = SKSceneScaleModeAspectFill;
-    
+     gAdBannerView.delegate = homeScene.delegate;
     // Present the scene.
     [self.view presentScene:homeScene];
 //
@@ -759,7 +769,12 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         [self endingDuck];
         [self playSoundDuckCrash];
         [self showFlatScreen];
-        [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
+        if([self hasConnectivity]){
+            GADRequest *request =[GADRequest request];
+            [gAdBannerView loadRequest:request];
+        }else{
+             [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
+        }
         //        [spriteDuck removeFromParent];
         //        SKTransition *reveal = [SKTransition flipHorizontalWithDuration:0.5];
         //        SKScene * gameOverScene = [[GameOverScene alloc] initWithSize:self.size];
@@ -915,6 +930,54 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
 -(void)openAppStore{
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/flappycandyduck-adventure/id887939637?ls=1&mt=8"]];
 }
-
+-(BOOL)hasConnectivity {
+    struct sockaddr_in zeroAddress;
+    bzero(&zeroAddress, sizeof(zeroAddress));
+    zeroAddress.sin_len = sizeof(zeroAddress);
+    zeroAddress.sin_family = AF_INET;
+    
+    SCNetworkReachabilityRef reachability = SCNetworkReachabilityCreateWithAddress(kCFAllocatorDefault, (const struct sockaddr*)&zeroAddress);
+    if(reachability != NULL) {
+        //NetworkStatus retVal = NotReachable;
+        SCNetworkReachabilityFlags flags;
+        if (SCNetworkReachabilityGetFlags(reachability, &flags)) {
+            if ((flags & kSCNetworkReachabilityFlagsReachable) == 0)
+            {
+                // if target host is not reachable
+                return NO;
+            }
+            
+            if ((flags & kSCNetworkReachabilityFlagsConnectionRequired) == 0)
+            {
+                // if target host is reachable and no connection is required
+                //  then we'll assume (for now) that your on Wi-Fi
+                return YES;
+            }
+            
+            
+            if ((((flags & kSCNetworkReachabilityFlagsConnectionOnDemand ) != 0) ||
+                 (flags & kSCNetworkReachabilityFlagsConnectionOnTraffic) != 0))
+            {
+                // ... and the connection is on-demand (or on-traffic) if the
+                //     calling application is using the CFSocketStream or higher APIs
+                
+                if ((flags & kSCNetworkReachabilityFlagsInterventionRequired) == 0)
+                {
+                    // ... and no [user] intervention is needed
+                    return YES;
+                }
+            }
+            
+            if ((flags & kSCNetworkReachabilityFlagsIsWWAN) == kSCNetworkReachabilityFlagsIsWWAN)
+            {
+                // ... but WWAN connections are OK if the calling application
+                //     is using the CFNetwork (CFSocketStream?) APIs.
+                return YES;
+            }
+        }
+    }
+    
+    return NO;
+}
 
 @end
