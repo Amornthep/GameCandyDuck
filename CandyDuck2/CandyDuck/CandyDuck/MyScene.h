@@ -39,6 +39,8 @@
     NSTimeInterval _lastCoinAdded;
     SKLabelNode *scoreLabel;
     SKLabelNode *heighScoreLabel;
+    SKLabelNode *dropShadowHeighScore;
+    SKLabelNode *dropShadowScore;
     AVAudioPlayer* _backgroundAudioPlayer;
     int score;
     ReadyGameView* readyGameView;

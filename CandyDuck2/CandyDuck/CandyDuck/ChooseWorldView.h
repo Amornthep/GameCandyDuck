@@ -17,5 +17,6 @@
 @property (weak, nonatomic) IBOutlet UIButton *menuButton;
 @property (weak, nonatomic) IBOutlet UIImageView *worldOne;
 @property (weak, nonatomic) IBOutlet UIImageView *worldTwo;
+@property (weak, nonatomic) IBOutlet UIImageView *bgSelectWorld;
 
 @end

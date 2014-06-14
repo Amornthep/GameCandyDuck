@@ -39,7 +39,7 @@ static const float OBJECT_VELOCITY = 160.0;
         //        [YMCPhysicsDebugger init];
         
         //world gravity
-        self.physicsWorld.gravity = CGVectorMake(0.0f, -5.0f);
+        self.physicsWorld.gravity = CGVectorMake(0.0f, -5.5f);
         self.physicsWorld.contactDelegate = self;
         
       
@@ -214,7 +214,7 @@ static const float OBJECT_VELOCITY = 160.0;
     gAdBannerView = [[GADBannerView alloc] initWithFrame:CGRectMake((self.size.width/2)-(GAD_SIZE_320x50.width/2), -GAD_SIZE_320x50.height, GAD_SIZE_320x50.width, GAD_SIZE_320x50.height)];
     gAdBannerView.adUnitID = @"e4a2102fe20a4f66";
     gAdBannerView.hidden = YES;
-    gAdBannerView.delegate = self;
+        gAdBannerView.delegate = self;
     gAdBannerView.rootViewController = self.view.window.rootViewController;
     [gameOverView addSubview:gAdBannerView];
         GADRequest *request =[GADRequest request];
@@ -233,7 +233,7 @@ static const float OBJECT_VELOCITY = 160.0;
         gameOverView.scoreNewImage.hidden=NO;
         [userDefaults setValue:[NSString stringWithFormat:@"%i",score] forKey:HIGH_SCORE_KEY];
         [userDefaults synchronize];
-        heighScoreLabel.hidden = YES;
+//        heighScoreLabel.hidden = YES;
     }else{
         gameOverView.scoreNewImage.hidden=YES;
     }
@@ -248,7 +248,7 @@ static const float OBJECT_VELOCITY = 160.0;
 }
 
 - (void)sendScore:(int)vScore{
-    [self reportScore:vScore forLeaderboardID:@"TestGameCenterBike"];
+    [self reportScore:vScore forLeaderboardID:@"CandyScore"];
 }
 
 - (void) reportScore: (int64_t) vScore forLeaderboardID: (NSString*) identifier
@@ -264,7 +264,6 @@ static const float OBJECT_VELOCITY = 160.0;
 }
 
 - (void)hideTopBanner:(UIView *)banner{
-    if(!banner)return;
     if (![banner isHidden]) {
         [UIView beginAnimations:@"bannerOff" context:NULL];
         banner.frame = CGRectOffset(banner.frame, 0, -banner.frame.size.height);
@@ -274,7 +273,6 @@ static const float OBJECT_VELOCITY = 160.0;
 }
 
 - (void)showTopBanner:(UIView *)banner{
-    if(!banner)return;
     if ([banner isHidden]) {
         [UIView beginAnimations:@"bannerOn" context:NULL];
         banner.frame = CGRectOffset(banner.frame, 0, banner.frame.size.height);
@@ -305,16 +303,18 @@ static const float OBJECT_VELOCITY = 160.0;
         [self showTopBanner:banner];
     }
 }
+
 -(void)playButtonPressed:(id)sender{
     gameOverView.hidden = YES;
-//    SKTransition *reveal = [SKTransition flipHorizontalWithDuration:0.5];
+    //    SKTransition *reveal = [SKTransition flipHorizontalWithDuration:0.5];
     MyScene * scene = [MyScene sceneWithSize:self.view.bounds.size];
     scene.mapState = self.mapState;
     gAdBannerView.delegate = scene;
-    
     scene.scaleMode = SKSceneScaleModeAspectFill;
     [self.view presentScene:scene ];
+
 }
+
 -(void)initalizingScrollingGroundBackground
 {
     for (int i = 0; i < 2; i++) {
@@ -459,28 +459,64 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
 -(void)addHeighScore{
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     if([userDefaults valueForKey:HIGH_SCORE_KEY]&&((NSString*)[userDefaults valueForKey:HIGH_SCORE_KEY]).length>0){
+        
+        SKSpriteNode *coinSprite;
+        coinSprite = [SKSpriteNode spriteNodeWithImageNamed:[NSString stringWithFormat:@"candy"]];
+        CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
+        if (screenHeight < 500) {
+            coinSprite.position = CGPointMake(400,self.size.height-30);
+        }else{
+            coinSprite.position = CGPointMake(470,self.size.height-30);
+        }
+        coinSprite.zPosition = 4;
+        [self addChild:coinSprite];
+        
         heighScoreLabel = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
+        heighScoreLabel.fontName = @"Skranji";
         heighScoreLabel.text = [NSString stringWithFormat:@"%@",[userDefaults valueForKey:HIGH_SCORE_KEY]];
         heighScoreLabel.fontSize = 28;
+        heighScoreLabel.fontColor = [SKColor blackColor];
         heighScoreLabel.zPosition = 4;
-        heighScoreLabel.position = CGPointMake(self.size.width-55,
-                                               self.frame.size.height-55);
+        heighScoreLabel.position = CGPointMake(coinSprite.size.width+coinSprite.position.x,self.frame.size.height-41);
+        
+        dropShadowHeighScore = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
+        dropShadowHeighScore.fontName = @"Skranji";
+        dropShadowHeighScore.fontSize = 28;
+        dropShadowHeighScore.fontColor = [SKColor whiteColor];
+        dropShadowHeighScore.text = heighScoreLabel.text;
+        dropShadowHeighScore.zPosition = heighScoreLabel.zPosition - 1;
+        dropShadowHeighScore.position = CGPointMake(dropShadowHeighScore.position.x + 1, dropShadowHeighScore.position.y + 1);
+        
+        [heighScoreLabel addChild:dropShadowHeighScore];
+        
         [self addChild:heighScoreLabel];
     }
 }
 -(void)addScoreLabel{
-    SKSpriteNode *coinSprite;
-    coinSprite = [SKSpriteNode spriteNodeWithImageNamed:[NSString stringWithFormat:@"candy"]];
-    coinSprite.position = CGPointMake(40,self.size.height-40);
-    coinSprite.zPosition = 4;
-    [self addChild:coinSprite];
-    
     scoreLabel = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
     scoreLabel.text = @"0";
-    scoreLabel.fontSize = 28;
+    scoreLabel.fontColor = [SKColor blackColor];
+    scoreLabel.fontName = @"Skranji";
+    scoreLabel.fontSize = 38;
     scoreLabel.zPosition = 4;
-    scoreLabel.position = CGPointMake(coinSprite.size.width+coinSprite.position.x,
-                                      self.frame.size.height-55);
+    CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
+    if (screenHeight < 500) {
+        scoreLabel.position = CGPointMake(self.size.width-245,
+                                          self.frame.size.height-45);
+    }else{
+        scoreLabel.position = CGPointMake(self.size.width-285,
+                                      self.frame.size.height-45);
+    }
+    
+    dropShadowScore = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
+    dropShadowScore.fontName = @"Skranji";
+    dropShadowScore.fontSize = 38;
+    dropShadowScore.fontColor = [SKColor whiteColor];
+    dropShadowScore.text = scoreLabel.text;
+    dropShadowScore.zPosition = scoreLabel.zPosition - 1;
+    dropShadowScore.position = CGPointMake(dropShadowScore.position.x + 1, dropShadowScore.position.y + 1);
+    
+    [scoreLabel addChild:dropShadowScore];
     
     //    [gameOverLabel setScale:0.1];
     [self addChild:scoreLabel];
@@ -737,6 +773,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         NSLog(@"coin crash");
         score+=1;
         [scoreLabel setText:[NSString stringWithFormat:@"%d",score]];
+        [dropShadowScore setText:[NSString stringWithFormat:@"%d",score]];
         SKAction *zoomIn = [SKAction scaleTo:2.0 duration:0.25];
         SKAction *zoomOut = [SKAction scaleTo:1.0 duration:0.25];
         SKAction *sequence = [SKAction sequence:@[zoomIn, zoomOut]];
@@ -744,7 +781,9 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         
         NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
         if(score>[[userDefaults valueForKey:HIGH_SCORE_KEY] intValue]){
-            heighScoreLabel.hidden = YES;
+//            heighScoreLabel.hidden = YES;
+            heighScoreLabel.text = [NSString stringWithFormat:@"%i",score];
+            dropShadowHeighScore.text = [NSString stringWithFormat:@"%i",score];
         }
     }else if ((firstBody.categoryBitMask & duckCategory) != 0 &&
               (secondBody.categoryBitMask & itemCategory) != 0)
@@ -771,6 +810,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
                      NSLog(@"coin crash");
                      score+=1;
                      [scoreLabel setText:[NSString stringWithFormat:@"%d",score]];
+                     [dropShadowScore setText:[NSString stringWithFormat:@"%d",score]];
                      SKAction *zoomIn = [SKAction scaleTo:2.0 duration:0.25];
                      SKAction *zoomOut = [SKAction scaleTo:1.0 duration:0.25];
                      SKAction *sequence = [SKAction sequence:@[zoomIn, zoomOut]];
@@ -778,7 +818,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
                      
                      NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
                      if(score>[[userDefaults valueForKey:HIGH_SCORE_KEY] intValue]){
-                         heighScoreLabel.hidden = YES;
+//                         heighScoreLabel.hidden = YES;
                      }
 
 
@@ -843,11 +883,28 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
     if ([SLComposeViewController isAvailableForServiceType:SLServiceTypeFacebook]) {
         slComposeViewController = [SLComposeViewController composeViewControllerForServiceType:SLServiceTypeFacebook];
         [slComposeViewController addImage:[UIImage imageWithData:theImageData]];
-        [slComposeViewController addURL:[NSURL URLWithString:@"www.google.com"]];
+        [slComposeViewController addURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/flappycandyduck-adventure/id887939637?ls=1&mt=8"]];
         UIViewController *vc = self.view.window.rootViewController;
         [vc presentViewController: slComposeViewController animated: YES completion:nil];
     }
 
+}
+
+- (void)showGameCenter:(id)sender
+{
+    GKGameCenterViewController *gameCenterController = [[GKGameCenterViewController alloc] init];
+    if (gameCenterController != nil)
+    {
+        gameCenterController.gameCenterDelegate = self;
+        gameCenterController.viewState = GKGameCenterViewControllerStateLeaderboards;
+        //        gameCenterController.leaderboardIdentifier = @"com.piyaphat.TestGameCenter.TestGameCenterBike";
+        
+        [self.view.window.rootViewController presentViewController:gameCenterController animated: YES completion:nil];
+        
+    }
+    //    [self showLeaderboard:@"com.piyaphat.TestGameCenter.TestGameCenterBike"];
+    
+    
 }
 
 

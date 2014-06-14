@@ -65,9 +65,16 @@ static const float BG_GROUND_VELOCITY = 160.0;
 -(void)candyDuckImage{
     SKSpriteNode *bg;
     bg = [SKSpriteNode spriteNodeWithImageNamed:@"candyduck-icon.png"];
-    bg.position = CGPointMake(self.size.width/2,self.size.height/2);
-    SKAction *moveDown = [SKAction moveTo:CGPointMake(self.size.width/2,(self.size.height/2)-15) duration:0.8];
-    SKAction *moveUp = [SKAction moveTo:CGPointMake(self.size.width/2,(self.size.height/2)+20) duration:0.8];
+    CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
+    float widthImg = 0;
+    if (screenHeight < 500) {
+        widthImg = self.size.width/2-15;
+    }else{
+        widthImg = self.size.width/2;
+    }
+    bg.position = CGPointMake(widthImg,self.size.height/2);
+    SKAction *moveDown = [SKAction moveTo:CGPointMake(widthImg,(self.size.height/2)-15) duration:0.8];
+    SKAction *moveUp = [SKAction moveTo:CGPointMake(widthImg,(self.size.height/2)+20) duration:0.8];
     SKAction *sequence = [SKAction sequence:@[moveDown,moveUp]];
     SKAction *forever = [SKAction repeatActionForever:sequence];
     [self addChild:bg];
@@ -168,5 +175,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
     }
 
 }
+
+
 
 @end

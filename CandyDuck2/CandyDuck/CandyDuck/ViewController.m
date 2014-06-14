@@ -99,13 +99,13 @@
     if ([SLComposeViewController isAvailableForServiceType:SLServiceTypeFacebook]) {
         slComposeViewController = [SLComposeViewController composeViewControllerForServiceType:SLServiceTypeFacebook];
         [slComposeViewController addImage:[UIImage imageWithData:theImageData]];
-        [slComposeViewController addURL:[NSURL URLWithString:@"www.google.com"]];
+        [slComposeViewController addURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/flappycandyduck-adventure/id887939637?ls=1&mt=8"]];
         [self presentViewController:slComposeViewController animated: YES completion:nil];
     }
 }
 
 - (void)sendScore:(int)score{
-    [self reportScore:score forLeaderboardID:@"TestGameCenterBike"];
+    [self reportScore:score forLeaderboardID:@"CandyScore"];
 }
 
 - (void) reportScore: (int64_t) score forLeaderboardID: (NSString*) identifier
@@ -121,7 +121,7 @@
 }
 
 -(void)openAppStore{
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://itunes.apple.com/th/app/bumres/id788508890?mt=8"]];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/flappycandyduck-adventure/id887939637?ls=1&mt=8"]];
 }
 
 - (void)didReceiveMemoryWarning
