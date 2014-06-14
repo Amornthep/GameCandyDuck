@@ -31,6 +31,9 @@ static const float OBJECT_VELOCITY = 160.0;
 #define ENDING_DUCK_KEY @"endingDuck"
 @implementation MyScene
 @synthesize gAdBannerView,iAdBannerView;
+
+HomeScene * homeScene;
+
 -(id)initWithSize:(CGSize)size {
     if (self = [super initWithSize:size]) {
         score=0;
@@ -340,12 +343,14 @@ static const float OBJECT_VELOCITY = 160.0;
 }
 -(void)SelectMapButtonPressed:(id)sender{
     gameOverView.hidden = YES;
-    HomeScene * scene = [HomeScene sceneWithSize:self.view.bounds.size];
-    scene.delegate = self;
-    scene.scaleMode = SKSceneScaleModeAspectFill;
+    homeScene = [HomeScene sceneWithSize:self.view.bounds.size];
+    homeScene.delegate = self;
+    homeScene.scaleMode = SKSceneScaleModeAspectFill;
     
     // Present the scene.
-    [self.view presentScene:scene];
+    [self.view presentScene:homeScene];
+//
+//    ViewController* viewController = [[ViewController alloc]init];
 
 //    ChooseWorldScene * scene = [ChooseWorldScene sceneWithSize:self.view.bounds.size];
 //    scene.scaleMode = SKSceneScaleModeAspectFill;
@@ -899,12 +904,16 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         gameCenterController.viewState = GKGameCenterViewControllerStateLeaderboards;
         //        gameCenterController.leaderboardIdentifier = @"com.piyaphat.TestGameCenter.TestGameCenterBike";
         
-        [self.view.window.rootViewController presentViewController:gameCenterController animated: YES completion:nil];
+        [homeScene.view.window.rootViewController presentViewController:gameCenterController animated: YES completion:nil];
         
     }
     //    [self showLeaderboard:@"com.piyaphat.TestGameCenter.TestGameCenterBike"];
     
     
+}
+
+-(void)openAppStore{
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://itunes.apple.com/us/app/flappycandyduck-adventure/id887939637?ls=1&mt=8"]];
 }
 
 
