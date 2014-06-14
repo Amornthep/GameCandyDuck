@@ -839,6 +839,8 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
                      NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
                      if(score>[[userDefaults valueForKey:HIGH_SCORE_KEY] intValue]){
 //                         heighScoreLabel.hidden = YES;
+                         [heighScoreLabel setText:[NSString stringWithFormat:@"%d",score]];
+                         [dropShadowHeighScore setText:[NSString stringWithFormat:@"%d",score]];
                      }
 
 
