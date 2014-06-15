@@ -54,7 +54,6 @@ HomeScene * homeScene;
         
         countRoundCoin = 1;
         
-        
         [self performSelector:@selector(addReadyGameView) withObject:nil afterDelay:0.5];
     }
     return self;
@@ -86,16 +85,26 @@ HomeScene * homeScene;
 }
 -(void) willMoveFromView:(SKView *)view
 {
-    [self.children enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-        SKNode* child = obj;
-        [child removeAllActions];
-    }];
-    
-    [self removeAllChildren];
-    [_backgroundAudioPlayer stop];
+//    [self.children enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+//        SKNode* child = obj;
+//        [child removeAllActions];
+//    }];
+//    
+//    [self removeAllChildren];
+    for (SKNode *child in self.children) {
+        [child removeFromParent];
+    }
+    [self removeFromParent];
+   [_backgroundAudioPlayer stop];
     gAdBannerView=nil;
 }
-
+//- (void)removeFromParent
+//{
+//    [self.aShapeNode removeFromParent];
+//    self.aShapeNode = nil;
+//    
+//    [super removeFromParent];
+//}
 -(void)setAnimationEndDuck{
     NSMutableArray *walkFrames = [NSMutableArray array];
     SKTextureAtlas *bearAnimatedAtlas;
@@ -225,13 +234,14 @@ HomeScene * homeScene;
         [gameOverView.selectMapButton addTarget:self action:@selector(SelectMapButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     }
     
-    
+    if(gAdBannerView==nil){
     gAdBannerView = [[GADBannerView alloc] initWithFrame:CGRectMake((self.size.width/2)-(GAD_SIZE_320x50.width/2), -GAD_SIZE_320x50.height, GAD_SIZE_320x50.width, GAD_SIZE_320x50.height)];
     gAdBannerView.adUnitID = @"e4a2102fe20a4f66";
     gAdBannerView.hidden = YES;
     gAdBannerView.delegate = self;
     gAdBannerView.rootViewController = self.view.window.rootViewController;
     [gameOverView addSubview:gAdBannerView];
+    }
     gameOverView.hidden = YES;
 }
 -(void)addGameOverView{
