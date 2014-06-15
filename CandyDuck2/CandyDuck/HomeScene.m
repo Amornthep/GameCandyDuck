@@ -12,6 +12,7 @@ static const float BG_VELOCITY = 100.0;
 static const float BG_GROUND_VELOCITY = 160.0;
 //static const float OBJECT_VELOCITY = 160.0;
 @implementation HomeScene
+
 -(id)initWithSize:(CGSize)size {
     if (self = [super initWithSize:size]) {
     
@@ -19,6 +20,7 @@ static const float BG_GROUND_VELOCITY = 160.0;
     }
     return self;
 }
+
 -(void)addReadyGameView{
     [self initalizingScrollingAirBackground];
     [self initalizingScrollingGroundBackground];
@@ -29,6 +31,8 @@ static const float BG_GROUND_VELOCITY = 160.0;
     [self addRateButton];
     self.backgroundColor = [SKColor whiteColor];
 }
+
+
 -(void)initalizingScrollingAirBackground
 {
     for (int i = 0; i < 2; i++) {

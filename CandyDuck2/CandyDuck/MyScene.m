@@ -48,7 +48,7 @@ HomeScene * homeScene;
         self.physicsWorld.gravity = CGVectorMake(0.0f, -5.5f);
         self.physicsWorld.contactDelegate = self;
         
-      
+        
         isGameOver = NO;
         isGameStart = NO;
         
@@ -63,10 +63,10 @@ HomeScene * homeScene;
 {
     //This is our general runAction method to make our bear walk.
     [spriteDuck runAction:[SKAction repeatActionForever:
-                      [SKAction animateWithTextures:duckWalkingFrames
-                                       timePerFrame:0.1f
-                                             resize:NO
-                                            restore:YES]] withKey:WALKING_DUCK_KEY];
+                           [SKAction animateWithTextures:duckWalkingFrames
+                                            timePerFrame:0.1f
+                                                  resize:NO
+                                                 restore:YES]] withKey:WALKING_DUCK_KEY];
     return;
 }
 -(void)endingDuck
@@ -83,26 +83,43 @@ HomeScene * homeScene;
                                                  restore:YES]] withKey:ENDING_DUCK_KEY];
     return;
 }
+-(void)readyPlayNextGame{
+    [self.children enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+        SKNode* child = obj;
+        [child removeAllActions];
+    }];
+    
+    [self removeAllChildren];
+    [_backgroundAudioPlayer stop];
+    
+    score=0;
+    isGameOver = NO;
+    isGameStart = NO;
+    countRoundCoin = 1;
+    [self hideTopBanner:gAdBannerView];
+    [self addReadyGameView];
+    
+}
 -(void) willMoveFromView:(SKView *)view
 {
-//    [self.children enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
-//        SKNode* child = obj;
-//        [child removeAllActions];
-//    }];
-//    
-//    [self removeAllChildren];
+    //    [self.children enumerateObjectsUsingBlock:^(id obj, NSUInteger idx, BOOL *stop) {
+    //        SKNode* child = obj;
+    //        [child removeAllActions];
+    //    }];
+    //
+    //    [self removeAllChildren];
     for (SKNode *child in self.children) {
         [child removeFromParent];
     }
     [self removeFromParent];
-   [_backgroundAudioPlayer stop];
+    [_backgroundAudioPlayer stop];
     gAdBannerView=nil;
 }
 //- (void)removeFromParent
 //{
 //    [self.aShapeNode removeFromParent];
 //    self.aShapeNode = nil;
-//    
+//
 //    [super removeFromParent];
 //}
 -(void)setAnimationEndDuck{
@@ -127,35 +144,35 @@ HomeScene * homeScene;
             
         }else if(self.mapState==GHOST_MAP){
             if(i<10){
-                 textureName = [NSString stringWithFormat:@"witchEND000%d", i];
+                textureName = [NSString stringWithFormat:@"witchEND000%d", i];
             }else{
-                 textureName = [NSString stringWithFormat:@"witchEND00%d", i];
+                textureName = [NSString stringWithFormat:@"witchEND00%d", i];
             }
-           
+            
         }else if(self.mapState==ICE_MAP){
             if(i<10){
-            textureName = [NSString stringWithFormat:@"snowEND000%d", i];
+                textureName = [NSString stringWithFormat:@"snowEND000%d", i];
             }else{
-            textureName = [NSString stringWithFormat:@"snowEND00%d", i];
+                textureName = [NSString stringWithFormat:@"snowEND00%d", i];
             }
         }
         SKTexture *temp = [bearAnimatedAtlas textureNamed:textureName];
         [walkFrames addObject:temp];
     }
     duckEndFrames = walkFrames;
-
+    
 }
 -(void)setAnimationDuck{
     NSMutableArray *walkFrames = [NSMutableArray array];
     SKTextureAtlas *bearAnimatedAtlas;
     if(self.mapState==FOREST_MAP){
-           bearAnimatedAtlas = [SKTextureAtlas atlasNamed:@"Zulu"];
+        bearAnimatedAtlas = [SKTextureAtlas atlasNamed:@"Zulu"];
     }else if(self.mapState==GHOST_MAP){
-           bearAnimatedAtlas = [SKTextureAtlas atlasNamed:@"witch"];
+        bearAnimatedAtlas = [SKTextureAtlas atlasNamed:@"witch"];
     }else if(self.mapState==ICE_MAP){
-           bearAnimatedAtlas = [SKTextureAtlas atlasNamed:@"snow"];
+        bearAnimatedAtlas = [SKTextureAtlas atlasNamed:@"snow"];
     }
- 
+    
     int numImages = (int)bearAnimatedAtlas.textureNames.count;
     for (int i=1; i <= numImages; i++) {
         NSString *textureName;
@@ -172,6 +189,7 @@ HomeScene * homeScene;
     duckWalkingFrames = walkFrames;
 }
 -(void)addReadyGameView{
+    
     if(self.mapState==FOREST_MAP){
         spriteDuck = [SKSpriteNode spriteNodeWithImageNamed:@"zulu1"];
     }else if(self.mapState==GHOST_MAP){
@@ -200,12 +218,9 @@ HomeScene * homeScene;
     [self startBackgroundMusic];
     [self addHeighScore];
     [self initGameOverViewAndAdmob];
+    
     if(readyGameView==nil){
         readyGameView = [[ReadyGameView alloc]init];
-        readyGameView.frame =  CGRectMake(0,0,self.size.width, self.size.height);
-        SKView * skView = (SKView *)self.view;
-        [skView addSubview:readyGameView];
-        [skView bringSubviewToFront:readyGameView];
         [readyGameView.readyButton addTarget:self action:@selector(readyButtonPressed) forControlEvents:UIControlEventTouchUpInside];
         if(self.mapState==FOREST_MAP){
             readyGameView.readyImageView.image = [UIImage imageNamed:@"ready-s1.png"];
@@ -215,6 +230,13 @@ HomeScene * homeScene;
             readyGameView.readyImageView.image = [UIImage imageNamed:@"ready-s3.png"];
         }
     }
+        readyGameView.frame =  CGRectMake(0,0,self.size.width, self.size.height);
+        SKView * skView = (SKView *)self.view;
+    readyGameView.hidden = NO;
+        [skView addSubview:readyGameView];
+        [skView bringSubviewToFront:readyGameView];
+    
+   
 }
 -(void)readyButtonPressed{
     readyGameView.hidden = YES;
@@ -224,28 +246,30 @@ HomeScene * homeScene;
 -(void)initGameOverViewAndAdmob{
     if(gameOverView==nil){
         gameOverView = [[GameOverView alloc]init];
-        gameOverView.frame =  CGRectMake(0,0,self.size.width, self.size.height);
-        SKView * skView = (SKView *)self.view;
-        [skView addSubview:gameOverView];
-        [skView bringSubviewToFront:gameOverView];
         [gameOverView.playButton addTarget:self action:@selector(playButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
         [gameOverView.gamecenterButton addTarget:self action:@selector(showGameCenterPressed:) forControlEvents:UIControlEventTouchUpInside];
         [gameOverView.shareButton addTarget:self action:@selector(shareFaceBookPressed:) forControlEvents:UIControlEventTouchUpInside];
         [gameOverView.selectMapButton addTarget:self action:@selector(SelectMapButtonPressed:) forControlEvents:UIControlEventTouchUpInside];
     }
+        gameOverView.frame =  CGRectMake(0,0,self.size.width, self.size.height);
+        SKView * skView = (SKView *)self.view;
+        [skView addSubview:gameOverView];
+        [skView bringSubviewToFront:gameOverView];
     
     if(gAdBannerView==nil){
-    gAdBannerView = [[GADBannerView alloc] initWithFrame:CGRectMake((self.size.width/2)-(GAD_SIZE_320x50.width/2), -GAD_SIZE_320x50.height, GAD_SIZE_320x50.width, GAD_SIZE_320x50.height)];
-    gAdBannerView.adUnitID = @"e4a2102fe20a4f66";
-    gAdBannerView.hidden = YES;
-    gAdBannerView.delegate = self;
-    gAdBannerView.rootViewController = self.view.window.rootViewController;
-    [gameOverView addSubview:gAdBannerView];
+        gAdBannerView = [[GADBannerView alloc] initWithFrame:CGRectMake((self.size.width/2)-(GAD_SIZE_320x50.width/2), -GAD_SIZE_320x50.height, GAD_SIZE_320x50.width, GAD_SIZE_320x50.height)];
+        gAdBannerView.adUnitID = @"e4a2102fe20a4f66";
+        gAdBannerView.hidden = YES;
+        gAdBannerView.delegate = self;
+        gAdBannerView.rootViewController = self.view.window.rootViewController;
+        [gameOverView addSubview:gAdBannerView];
+        GADRequest *request =[GADRequest request];
+        [gAdBannerView loadRequest:request];
     }
     gameOverView.hidden = YES;
 }
 -(void)addGameOverView{
- gameOverView.hidden = NO;
+    gameOverView.hidden = NO;
     [self showTopBanner:gAdBannerView];
     gameOverView.scoreLabel.text = [NSString stringWithFormat:@"%i",score];
     [self sendScore:score];
@@ -254,7 +278,7 @@ HomeScene * homeScene;
         gameOverView.scoreNewImage.hidden=NO;
         [userDefaults setValue:[NSString stringWithFormat:@"%i",score] forKey:HIGH_SCORE_KEY];
         [userDefaults synchronize];
-//        heighScoreLabel.hidden = YES;
+        //        heighScoreLabel.hidden = YES;
     }else{
         gameOverView.scoreNewImage.hidden=YES;
     }
@@ -307,10 +331,10 @@ HomeScene * homeScene;
 }
 
 - (void)bannerView:(ADBannerView *)banner didFailToReceiveAdWithError:(NSError *)error{
-//    GADRequest *request =[GADRequest request];
-//    request.testing = YES;
-//request.testDevices = @[ @"14503a83b94f3dd470c7429075deabc6" ];
-//    [gAdBannerView loadRequest:request];
+    //    GADRequest *request =[GADRequest request];
+    //    request.testing = YES;
+    //request.testDevices = @[ @"14503a83b94f3dd470c7429075deabc6" ];
+    //    [gAdBannerView loadRequest:request];
     [self hideTopBanner:iAdBannerView];
     [self showTopBanner:gAdBannerView];
 }
@@ -323,19 +347,19 @@ HomeScene * homeScene;
     if ([iAdBannerView isHidden]) {
         [self showTopBanner:banner];
     }
-    [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
-    
+    //    [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
 }
 
 -(void)playButtonPressed:(id)sender{
     gameOverView.hidden = YES;
     //    SKTransition *reveal = [SKTransition flipHorizontalWithDuration:0.5];
-    MyScene * scene = [MyScene sceneWithSize:self.view.bounds.size];
-    scene.mapState = self.mapState;
-    gAdBannerView.delegate = scene;
-    scene.scaleMode = SKSceneScaleModeAspectFill;
-    [self.view presentScene:scene ];
-
+    //    MyScene * scene = [MyScene sceneWithSize:self.view.bounds.size];
+    //    scene.mapState = self.mapState;
+    //    gAdBannerView.delegate = scene;
+    //    scene.scaleMode = SKSceneScaleModeAspectFill;
+    //    [self.view presentScene:scene ];
+    
+    [self readyPlayNextGame];
 }
 
 -(void)initalizingScrollingGroundBackground
@@ -366,20 +390,20 @@ HomeScene * homeScene;
     homeScene = [HomeScene sceneWithSize:self.view.bounds.size];
     homeScene.delegate = self;
     homeScene.scaleMode = SKSceneScaleModeAspectFill;
-     gAdBannerView.delegate = homeScene.delegate;
+    gAdBannerView.delegate = homeScene.delegate;
     // Present the scene.
     [self.view presentScene:homeScene];
-//
-//    ViewController* viewController = [[ViewController alloc]init];
-
-//    ChooseWorldScene * scene = [ChooseWorldScene sceneWithSize:self.view.bounds.size];
-//    scene.scaleMode = SKSceneScaleModeAspectFill;
+    //
+    //    ViewController* viewController = [[ViewController alloc]init];
+    
+    //    ChooseWorldScene * scene = [ChooseWorldScene sceneWithSize:self.view.bounds.size];
+    //    scene.scaleMode = SKSceneScaleModeAspectFill;
     // Present the scene.
-//    SKTransition *reveal = [SKTransition flipHorizontalWithDuration:0.5];
-//    scene.scaleMode = SKSceneScaleModeAspectFill;
-//    [self.view presentScene:scene];
-//    [self hideTopBanner:gAdBannerView];
-//    [self hideTopBanner:iAdBannerView];
+    //    SKTransition *reveal = [SKTransition flipHorizontalWithDuration:0.5];
+    //    scene.scaleMode = SKSceneScaleModeAspectFill;
+    //    [self.view presentScene:scene];
+    //    [self hideTopBanner:gAdBannerView];
+    //    [self hideTopBanner:iAdBannerView];
 }
 -(void)initalizingScrollingAirBackground
 {
@@ -530,7 +554,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
                                           self.frame.size.height-45);
     }else{
         scoreLabel.position = CGPointMake(self.size.width-285,
-                                      self.frame.size.height-45);
+                                          self.frame.size.height-45);
     }
     
     dropShadowScore = [SKLabelNode labelNodeWithFontNamed:@"Chalkduster"];
@@ -720,7 +744,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         _dt = 0;
     }
     _lastUpdateTime = currentTime;
-
+    
     [self moveBg];
     if(!isGameStart)return;
     //move object & bg
@@ -744,12 +768,12 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
             SKAction *moveNodeUp = [SKAction rotateToAngle:M_PI/4 duration:0.2];
             [spriteDuck runAction: moveNodeUp];
             
-//            spriteDuck.zRotation = M_PI/4;
+            //            spriteDuck.zRotation = M_PI/4;
         }else{
             SKAction *moveNodeUp = [SKAction rotateToAngle:-M_PI/4 duration:0.2];
             [spriteDuck runAction: moveNodeUp];
             
-//            spriteDuck.zRotation = -M_PI/4;
+            //            spriteDuck.zRotation = -M_PI/4;
         }
     }
     //draw all physicsBodies in the scene
@@ -780,10 +804,13 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         [self playSoundDuckCrash];
         [self showFlatScreen];
         if([self hasConnectivity]){
-            GADRequest *request =[GADRequest request];
-            [gAdBannerView loadRequest:request];
+            //            GADRequest *request =[GADRequest request];
+            //            [gAdBannerView loadRequest:request];
+            [self showTopBanner:gAdBannerView];
+            [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
+            
         }else{
-             [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
+            [self performSelector:@selector(addGameOverView) withObject:nil afterDelay:1];
         }
         //        [spriteDuck removeFromParent];
         //        SKTransition *reveal = [SKTransition flipHorizontalWithDuration:0.5];
@@ -811,7 +838,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         
         NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
         if(score>[[userDefaults valueForKey:HIGH_SCORE_KEY] intValue]){
-//            heighScoreLabel.hidden = YES;
+            //            heighScoreLabel.hidden = YES;
             heighScoreLabel.text = [NSString stringWithFormat:@"%i",score];
             dropShadowHeighScore.text = [NSString stringWithFormat:@"%i",score];
         }
@@ -834,27 +861,27 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
             SKSpriteNode *ob = (SKSpriteNode *) node;
             ob.physicsBody = nil;
             [ob runAction:[SKAction moveTo:spriteDuck.position duration:0.5f]
-                 completion:^{
-                     [ob removeFromParent];
-                     [self playSoundKeepCoin];
-                     NSLog(@"coin crash");
-                     score+=1;
-                     [scoreLabel setText:[NSString stringWithFormat:@"%d",score]];
-                     [dropShadowScore setText:[NSString stringWithFormat:@"%d",score]];
-                     SKAction *zoomIn = [SKAction scaleTo:2.0 duration:0.25];
-                     SKAction *zoomOut = [SKAction scaleTo:1.0 duration:0.25];
-                     SKAction *sequence = [SKAction sequence:@[zoomIn, zoomOut]];
-                     [scoreLabel runAction: sequence];
-                     
-                     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-                     if(score>[[userDefaults valueForKey:HIGH_SCORE_KEY] intValue]){
-//                         heighScoreLabel.hidden = YES;
-                         [heighScoreLabel setText:[NSString stringWithFormat:@"%d",score]];
-                         [dropShadowHeighScore setText:[NSString stringWithFormat:@"%d",score]];
-                     }
-
-
-                 }];
+               completion:^{
+                   [ob removeFromParent];
+                   [self playSoundKeepCoin];
+                   NSLog(@"coin crash");
+                   score+=1;
+                   [scoreLabel setText:[NSString stringWithFormat:@"%d",score]];
+                   [dropShadowScore setText:[NSString stringWithFormat:@"%d",score]];
+                   SKAction *zoomIn = [SKAction scaleTo:2.0 duration:0.25];
+                   SKAction *zoomOut = [SKAction scaleTo:1.0 duration:0.25];
+                   SKAction *sequence = [SKAction sequence:@[zoomIn, zoomOut]];
+                   [scoreLabel runAction: sequence];
+                   
+                   NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+                   if(score>[[userDefaults valueForKey:HIGH_SCORE_KEY] intValue]){
+                       //                         heighScoreLabel.hidden = YES;
+                       [heighScoreLabel setText:[NSString stringWithFormat:@"%d",score]];
+                       [dropShadowHeighScore setText:[NSString stringWithFormat:@"%d",score]];
+                   }
+                   
+                   
+               }];
         }
         
     }
@@ -886,7 +913,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
                      }];
 }
 - (void)showGameCenterPressed:(id)sender{
-//    [self.delegate showGameCenter:sender];
+    //    [self.delegate showGameCenter:sender];
     GKGameCenterViewController *gameCenterController = [[GKGameCenterViewController alloc] init];
     if (gameCenterController != nil)
     {
@@ -903,7 +930,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
 }
 
 - (void)shareFaceBookPressed:(id)sender{
-//    [self.delegate shareFacebook:sender];
+    //    [self.delegate shareFacebook:sender];
     UIGraphicsBeginImageContextWithOptions(self.view.bounds.size, self.view.opaque, 0.0);
     [self.view.layer renderInContext:UIGraphicsGetCurrentContext()];
     UIImage*theImage=UIGraphicsGetImageFromCurrentImageContext();
@@ -919,7 +946,7 @@ static inline CGPoint CGPointMultiplyScalar(const CGPoint a, const CGFloat b)
         UIViewController *vc = self.view.window.rootViewController;
         [vc presentViewController: slComposeViewController animated: YES completion:nil];
     }
-
+    
 }
 
 - (void)showGameCenter:(id)sender
